@@ -306,6 +306,12 @@ function viewAccounts() {
       : flat(tab === 'courant' ? current : savings)}
     ${closed.length ? `<details class="closed"><summary>Comptes clôturés (${closed.length})</summary>${flat(closed)}</details>` : ''}
     <a class="btn ghost block" href="#/nouveau-compte">＋ Nouveau compte</a></div>`;
+  // Total flouté par défaut : il s'affiche tant que le doigt (ou la souris) reste appuyé dessus.
+  const total = view.querySelector('.home-total');
+  const peek = on => total.classList.toggle('peek', on);
+  total.addEventListener('pointerdown', () => peek(true));
+  for (const type of ['pointerup', 'pointercancel', 'pointerleave']) total.addEventListener(type, () => peek(false));
+  total.addEventListener('contextmenu', ev => ev.preventDefault()); // pas de menu ni de sélection à l'appui long
 }
 
 // ---------- Écran : opérations d'un compte ----------

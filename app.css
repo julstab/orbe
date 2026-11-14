@@ -210,6 +210,12 @@ main.chat-page { display: flex; flex-direction: column; min-height: calc(100dvh 
   box-shadow: 0 14px 30px -18px var(--glow);
 }
 .home-total { font-size: 36px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+/* Flouté tant qu'on n'appuie pas dessus. */
+.home-total {
+  filter: blur(12px); transition: filter .15s; cursor: pointer;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.home-total.peek { filter: none; }
 .home-sub { margin-top: 4px; font-size: 12px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: rgb(255 255 255 / .82); }
 .home-sub .amt { letter-spacing: 0; }
 .home-month { margin-top: 10px; padding-top: 9px; border-top: 1px solid rgb(255 255 255 / .2); font-size: 13px; color: rgb(255 255 255 / .85); }
