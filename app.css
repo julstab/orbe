@@ -214,6 +214,7 @@ main.chat-page { display: flex; flex-direction: column; min-height: calc(100dvh 
 .home-total {
   filter: blur(12px); transition: filter .15s; cursor: pointer;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent; /* pas de rectangle à l'appui : seul le flou disparaît */
 }
 .home-total.peek { filter: none; }
 .home-sub { margin-top: 4px; font-size: 12px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: rgb(255 255 255 / .82); }
