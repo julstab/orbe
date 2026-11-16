@@ -253,7 +253,7 @@ const STEPS = {
 function instructions() {
   const today = store.todayStr();
   const long = new Date(`${today}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  return `Tu es l'assistant de « Comptes », l'application où l'utilisateur suit ses comptes bancaires personnels. Nous sommes le ${long} (${today}).
+  return `Tu es l'assistant de « Orbe », l'application où l'utilisateur suit ses comptes bancaires personnels. Nous sommes le ${long} (${today}).
 - Réponds en français, brièvement, en Markdown simple : gras, listes, et au besoin un petit tableau de 3 colonnes au plus.
 - Pour tout chiffre, appelle les fonctions : n'invente jamais un montant, une date ni une opération. Les fonctions donnent des montants en euros ; négatif = dépense, positif = recette. Écris les montants à la française : 1 234,56 €.
 - Le « solde » d'un compte est son solde pointé, celui que la banque affiche. Le solde du jour compte aussi les opérations saisies pas encore pointées ; la fin du mois prévue ajoute ce qui reste à passer ce mois-ci.

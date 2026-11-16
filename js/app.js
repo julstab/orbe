@@ -51,7 +51,7 @@ function toast(msg) {
 function setHeader(title, back) {
   $('#title').textContent = title;
   $('#back').hidden = !back;
-  document.title = back ? `${title} · Comptes` : 'Comptes';
+  document.title = back ? `${title} · Orbe` : 'Orbe';
 }
 
 const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
@@ -232,7 +232,7 @@ function renderSide() {
   const group = (title, list) => (list.length ? `<h2 class="side-h"><span>${title}</span>
     <span class="amt">${money(list.reduce((s, a) => s + chk.get(a.id), 0))}</span></h2>${list.map(row).join('')}` : '');
   side.innerHTML = `
-    <a class="side-brand" href="#/">💰 Comptes</a>
+    <a class="side-brand" href="#/"><img src="icons/icon.svg" alt="" width="26" height="26">Orbe</a>
     <a class="btn primary" href="#/nouvelle-operation/${store.idx.acc.has(accId) ? accId : defaultAccId()}">${ICON_PLUS}Nouvelle opération</a>
     <nav class="side-nav" aria-label="Menu">
       ${nav('#/', ICONS.home, 'Accueil', /^#\/?$/)}
@@ -250,7 +250,7 @@ const HOME_TAB = 'comptes.homeTab';
 let homeTab = (() => { try { return localStorage.getItem(HOME_TAB) || 'courant'; } catch { return 'courant'; } })();
 
 function viewAccounts() {
-  setHeader('Comptes', false);
+  setHeader('Orbe', false);
   if (!store.idx.acc.size) {
     view.innerHTML = `
       <section class="empty-state">

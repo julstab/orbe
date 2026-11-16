@@ -528,7 +528,7 @@ a.rank-row:hover .rank-name { text-decoration: underline; }
   /* ＋ des récurrentes : en bas à droite du contenu plutôt que dans le coin de l'écran. */
   .fab { position: sticky; bottom: 24px; margin: 16px 0 0 auto; }
 
-  .side-brand { padding: 6px 10px 14px; color: inherit; font-size: 18px; font-weight: 600; text-decoration: none; }
+  .side-brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 14px; color: inherit; font-size: 18px; font-weight: 600; text-decoration: none; }
   .side > .btn { margin: 0 2px 12px; }
   .side-nav { display: grid; gap: 2px; }
   .side-nav a {
