@@ -216,7 +216,7 @@ function renderTabbar(hash) {
     ${link('#/reglages', ICONS.gear, 'Réglages', /^#\/reglages/)}`;
 }
 
-// ---------- Barre latérale (PC) : nouvelle opération, menu, comptes avec leur solde pointé ----------
+// ---------- Barre latérale (PC) : nouvelle opération, menu et, dans un compte, les comptes de son groupe ----------
 const wideScreen = matchMedia('(min-width: 1000px)');
 wideScreen.addEventListener('change', () => renderSide());
 
@@ -225,8 +225,11 @@ function renderSide() {
   if (!wideScreen.matches || !store.idx.acc.size) { side.innerHTML = ''; return; }
   const { current, savings, chk } = accountGroups(store.todayStr());
   const hash = location.hash || '#/';
-  const accId = hash.match(/^#\/(?:compte|nouvelle-operation|pointage)\/(\w+)/)?.[1];
-  const here = ' class="on" aria-current="page"';
+  const accId = hash.match(/^#\/(?:compte|nouvelle-operation|pointage)\/(\w+)/)?.[1]
+    ?? store.idx.entry.get(hash.match(/^#\/operation\/(\w+)$/)?.[1])?.acc;
+  // La liste ne double pas l'accueil : seul le groupe du compte ouvert est affiché.
+  const shown = [['Comptes courants', current], ['Épargne', savings]].find(([, list]) => list.some(a => a.id === accId));
+  const here =' class="on" aria-current="page"';
   const nav = (href, ico, label, re) => `<a href="${href}"${re.test(hash) ? here : ''}>${ico}${label}</a>`;
   const row = a => `<a class="side-acc${a.id === accId ? ' on' : ''}" href="#/compte/${a.id}"${a.id === accId ? ' aria-current="page"' : ''}>
     ${bankLogo(a, 28)}<span class="side-name">${esc(a.name)}</span><span class="amt ${negClass(chk.get(a.id))}">${money(chk.get(a.id))}</span></a>`;
@@ -242,8 +245,7 @@ function renderSide() {
       ${nav('#/assistant', ICONS.gemini, 'Assistant', /^#\/assistant/)}
       ${nav('#/reglages', ICONS.gear, 'Réglages', /^#\/reglages/)}
     </nav>
-    ${group('Comptes courants', current)}
-    ${group('Épargne', savings)}`;
+    ${shown ? group(...shown) : ''}`;
 }
 
 // Onglet de l'accueil (courant, epargne, tous), retenu sur cet appareil.
