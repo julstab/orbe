@@ -43,6 +43,7 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .top h1 { flex: 1; margin: 0 0 0 4px; font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .brand { flex: none; margin-left: 4px; } /* logo à côté du nom, sur l'accueil */
 /* Réglages : dans la barre du bas (téléphone) ou la barre latérale (PC), plus dans l'en-tête. */
 .top a[href="#/reglages"] { display: none; }
 .icon-btn {
@@ -520,6 +521,7 @@ a.rank-row:hover .rank-name { text-decoration: underline; }
     background: var(--surface); border-right: 1px solid var(--border);
   }
   .top { grid-column: 2; min-height: var(--top-h); padding-inline: 24px; }
+  .top .brand { display: none; } /* déjà dans le menu latéral */
   /* La barre latérale remplace la barre du bas et le ＋ d'un compte. */
   .tabbar, .fab.new-op { display: none; }
   main, body.has-tabbar main { grid-column: 2; width: 100%; max-width: 880px; margin: 0; padding: 24px 32px 48px; }

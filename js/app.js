@@ -51,6 +51,7 @@ function toast(msg) {
 function setHeader(title, back) {
   $('#title').textContent = title;
   $('#back').hidden = !back;
+  $('#brand').hidden = back; // le logo accompagne le nom de l'appli, sur l'accueil
   document.title = back ? `${title} · Orbe` : 'Orbe';
 }
 
