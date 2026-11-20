@@ -394,6 +394,10 @@ button.month[aria-expanded="false"] svg { transform: rotate(-90deg); }
 .sugg button:first-child { border-top: 0; }
 .sugg button:hover, .sugg button:focus-visible { background: var(--surface-2); outline: none; }
 .sugg small { color: var(--muted); white-space: nowrap; font-size: 12.5px; }
+/* Libellés proposés (opération, récurrente) : le libellé sur sa ligne, dessous la catégorie (coupée si trop longue) et le montant à droite. */
+#sugg button { flex-direction: column; align-items: stretch; gap: 2px; }
+#sugg small { display: flex; gap: 10px; }
+#sugg .s-cat { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* Catégorie : liste filtrée sous le champ, qui défile seule. */
 .cat-field { scroll-margin-top: calc(var(--top-h) + 8px); }
 body.picking main { padding-bottom: 80vh; }

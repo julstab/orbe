@@ -1094,7 +1094,7 @@ function viewEntryForm(id, accId) {
     picks = suggest(F.title.value);
     box.hidden = !picks.length;
     box.innerHTML = picks.map((t, i) => `<button type="button" data-i="${i}">
-      <span>${esc(t.title)}</span><small>${esc(catLabel(t.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
+      <span>${esc(t.title)}</span><small><span class="s-cat">${esc(catLabel(t.cat))}</span><span>${signed(t.last.amt)}</span></small></button>`).join('');
   });
   box.addEventListener('mousedown', ev => ev.preventDefault());
   box.addEventListener('click', ev => {
@@ -1645,7 +1645,7 @@ function viewOrderForm(id) {
     picks = suggest(F.title.value);
     box.hidden = !picks.length;
     box.innerHTML = picks.map((t, i) => `<button type="button" data-i="${i}">
-      <span>${esc(t.title)}</span><small>${esc(catLabel(t.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
+      <span>${esc(t.title)}</span><small><span class="s-cat">${esc(catLabel(t.cat))}</span><span>${signed(t.last.amt)}</span></small></button>`).join('');
   });
   box.addEventListener('mousedown', ev => ev.preventDefault());
   box.addEventListener('click', ev => {
