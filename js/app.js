@@ -587,7 +587,7 @@ function prepareDraft(a) {
     const loose = hits.length ? hits : all.filter(c => norm(catLabel(c.id)).includes(n));
     cat = (loose.find(c => c.type === type) ?? loose[0])?.id ?? '';
     if (!cat) notes.push(`Catégorie « ${a.categorie} » introuvable : laissée vide.`);
-  } else if (known?.last.cat) cat = known.last.cat;
+  } else if (known?.cat) cat = titleCat(known, type);
   if (cat && store.idx.cat.get(cat)?.type !== type) cat = twinCat(cat);
   const modes = store.data?.modes ?? store.DEFAULT_MODES;
   const mode = (a.mode && modes.find(m => norm(m) === norm(a.mode) || norm(m).startsWith(norm(a.mode))))
@@ -744,16 +744,24 @@ function getTitleIndex() {
     if (!t) byTitle.set(k, (t = { title: e.title, key: k, n: 0, last: e }));
     t.n++;
     if (e.date >= t.last.date) t.last = e;
+    // Catégorie mémorisée du libellé : celle de sa dernière opération qui en a une (une saisie sans catégorie ne l'efface pas).
+    if (e.cat && store.idx.cat.has(e.cat) && !(t.catDate > e.date)) { t.cat = e.cat; t.catDate = e.date; }
   }
   // Libellés des récurrentes qui n'ont pas encore créé d'opération (début à venir) : proposés aussi.
   for (const o of recur.activeOrders()) {
     const k = o.title && norm(o.title);
     if (!k || byTitle.has(k)) continue;
-    byTitle.set(k, { title: o.title, key: k, n: 0, last: { title: o.title, amt: o.amt, cat: o.cat, mode: o.mode, acc: o.acc, date: o.start } });
+    byTitle.set(k, { title: o.title, key: k, n: 0, cat: o.cat, last: { title: o.title, amt: o.amt, cat: o.cat, mode: o.mode, acc: o.acc, date: o.start } });
   }
   // Les libellés utilisés le plus récemment d'abord.
   titleIndex = [...byTitle.values()].sort((a, b) => (a.last.date < b.last.date ? 1 : -1));
   return titleIndex;
+}
+
+// Catégorie mémorisée d'un libellé, dans le sens voulu (dépense ou recette) : sa jumelle quand le sens diffère.
+function titleCat(t, type) {
+  const c = t?.cat ?? '';
+  return c && store.idx.cat.get(c)?.type !== type ? twinCat(c) : c;
 }
 
 function suggest(text) {
@@ -1052,7 +1060,7 @@ function viewEntryForm(id, accId) {
       <label class="check"><input type="checkbox" name="chk" ${e?.chk ? 'checked' : ''}> Opération pointée</label>
       <div class="actions">
         <button class="btn primary" type="submit">Enregistrer</button>
-        ${e ? '<button class="btn danger" type="button" id="del">Supprimer</button>' : ''}
+        ${e ? '<button class="btn ghost" type="button" id="dup">Dupliquer</button><button class="btn danger" type="button" id="del">Supprimer</button>' : ''}
       </div>
     </form>`;
 
@@ -1075,7 +1083,7 @@ function viewEntryForm(id, accId) {
     F.title.value = t.title;
     const ty = last.amt > 0 ? 'R' : 'D';
     f.querySelector(`input[name=type][value=${ty}]`).checked = true;
-    F.cat.innerHTML = catOptions(ty, last.cat ?? '');
+    F.cat.innerHTML = catOptions(ty, titleCat(t, ty));
     if (last.mode) F.mode.innerHTML = modeOptions(last.mode);
     F.amt.placeholder = `dernier : ${amountInput(last.amt)}`;
     box.hidden = true;
@@ -1086,7 +1094,7 @@ function viewEntryForm(id, accId) {
     picks = suggest(F.title.value);
     box.hidden = !picks.length;
     box.innerHTML = picks.map((t, i) => `<button type="button" data-i="${i}">
-      <span>${esc(t.title)}</span><small>${esc(catLabel(t.last.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
+      <span>${esc(t.title)}</span><small>${esc(catLabel(t.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
   });
   box.addEventListener('mousedown', ev => ev.preventDefault());
   box.addEventListener('click', ev => {
@@ -1095,6 +1103,11 @@ function viewEntryForm(id, accId) {
   });
   F.title.addEventListener('blur', () => setTimeout(() => (box.hidden = true), 150));
   F.title.addEventListener('keydown', ev => { if (ev.key === 'Escape') box.hidden = true; });
+  // Libellé connu tapé en entier sans toucher la suggestion : sa catégorie mémorisée est reprise si aucune n'est choisie.
+  F.title.addEventListener('change', () => {
+    const t = getTitleIndex().find(x => x.key === norm(F.title.value.trim()));
+    if (t && !F.cat.value) F.cat.innerHTML = catOptions(currentType(), titleCat(t, currentType()));
+  });
 
   // Saisie par photo : Gemini lit le ticket, le formulaire est pré-rempli, l'utilisateur vérifie et enregistre.
   const photoBtn = $('#photo-btn'), pickBtn = $('#pick-btn');
@@ -1315,6 +1328,12 @@ function viewEntryForm(id, accId) {
     goBack(`#/compte/${rec.acc}`);
   });
 
+  // Dupliquer : nouvelle opération pré-remplie comme celle-ci (virement compris), à la date du jour et non pointée.
+  $('#dup')?.addEventListener('click', () => {
+    pendingDraft = { title: e.title, amt: e.amt, date: store.todayStr(), acc: e.acc, cat: e.cat, mode: e.mode, pair: p?.acc };
+    location.replace(`#/nouvelle-operation/${e.acc}`); // remplace la fiche d'origine : le retour mène au compte
+  });
+
   $('#del')?.addEventListener('click', async () => {
     const other = p && store.idx.acc.get(p.acc)?.name;
     if (!confirm(`Supprimer l'opération « ${e.title} » (${signed(e.amt)})${p ? ` et l'opération inverse sur ${other}` : ''} ?`)) return;
@@ -1335,7 +1354,7 @@ function lookalikes(acc, amt, date) {
 // Ce que Gemini doit connaître pour reprendre les habitudes de saisie : libellés récents, catégories, modes.
 function ticketContext() {
   const titles = getTitleIndex().filter(t => t.last.amt < 0).slice(0, 150)
-    .map(t => `${t.title} | ${catLabel(t.last.cat) || '-'} | ${t.last.mode || '-'}`);
+    .map(t => `${t.title} | ${catLabel(t.cat) || '-'} | ${t.last.mode || '-'}`);
   const categories = [...new Set([...store.idx.cat.values()].map(c => catLabel(c.id)))].sort((a, b) => a.localeCompare(b, 'fr'));
   return { today: store.todayStr(), titles, categories, modes: store.data?.modes ?? store.DEFAULT_MODES };
 }
@@ -1345,7 +1364,7 @@ function sentenceContext() {
   const ctx = ticketContext();
   const accName = id => store.idx.acc.get(id)?.name ?? '-';
   ctx.titles = getTitleIndex().slice(0, 200)
-    .map(t => `${t.title} | ${t.last.amt > 0 ? 'recette' : 'dépense'} | ${catLabel(t.last.cat) || '-'} | ${accName(t.last.acc)}`);
+    .map(t => `${t.title} | ${t.last.amt > 0 ? 'recette' : 'dépense'} | ${catLabel(t.cat) || '-'} | ${accName(t.last.acc)}`);
   ctx.accounts = [...store.idx.acc.values()].filter(a => !a.closed).sort((a, b) => a.pos - b.pos).map(a => a.name);
   ctx.todayLong = new Date(`${ctx.today}T12:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   return ctx;
@@ -1626,7 +1645,7 @@ function viewOrderForm(id) {
     picks = suggest(F.title.value);
     box.hidden = !picks.length;
     box.innerHTML = picks.map((t, i) => `<button type="button" data-i="${i}">
-      <span>${esc(t.title)}</span><small>${esc(catLabel(t.last.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
+      <span>${esc(t.title)}</span><small>${esc(catLabel(t.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
   });
   box.addEventListener('mousedown', ev => ev.preventDefault());
   box.addEventListener('click', ev => {
@@ -1636,7 +1655,7 @@ function viewOrderForm(id) {
     F.title.value = picks[+b.dataset.i].title;
     const ty = last.amt > 0 ? 'R' : 'D';
     f.querySelector(`input[name=type][value=${ty}]`).checked = true;
-    F.cat.innerHTML = catOptions(ty, last.cat ?? '');
+    F.cat.innerHTML = catOptions(ty, titleCat(picks[+b.dataset.i], ty));
     if (last.mode) F.mode.innerHTML = modeOptions(last.mode);
     F.amt.placeholder = `dernier : ${amountInput(last.amt)}`;
     box.hidden = true;
@@ -1644,6 +1663,10 @@ function viewOrderForm(id) {
   });
   F.title.addEventListener('blur', () => setTimeout(() => (box.hidden = true), 150));
   F.title.addEventListener('keydown', ev => { if (ev.key === 'Escape') box.hidden = true; });
+  F.title.addEventListener('change', () => {
+    const t = getTitleIndex().find(x => x.key === norm(F.title.value.trim()));
+    if (t && !F.cat.value) F.cat.innerHTML = catOptions(currentType(), titleCat(t, currentType()));
+  });
 
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
