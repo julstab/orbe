@@ -559,7 +559,7 @@ function prepareDraft(a) {
   if (!(cents > 0)) throw new Error('Montant manquant ou nul.');
   const q = norm(said);
   const known = getTitleIndex().find(t => t.key === q) ?? getTitleIndex().find(t => t.key.includes(q));
-  const type = a.sens === 'recette' ? 'R' : a.sens === 'depense' ? 'D' : known && known.last.amt > 0 ? 'R' : 'D';
+  let type = a.sens === 'recette' ? 'R' : a.sens === 'depense' ? 'D' : known && known.last.amt > 0 ? 'R' : 'D';
   // Compte : nom exact, sinon contenu dans le nom ou la banque ; à plusieurs, le seul compte courant l'emporte.
   const open = [...store.idx.acc.values()].filter(x => !x.closed).sort((x, y) => x.pos - y.pos);
   const findAcc = name => {
@@ -575,6 +575,9 @@ function prepareDraft(a) {
   const acc = a.compte ? findAcc(a.compte) : usable(known?.last.acc) ?? defaultAccId();
   const pair = a.virement_vers ? findAcc(a.virement_vers) : '';
   if (pair === acc) throw new Error('Le virement doit aller vers un autre compte.');
+  // Virement : l'argent part toujours de « compte » vers « virement_vers ». Le sens ne se devine pas d'après le
+  // libellé, dont la dernière opération peut être la moitié créditée d'un virement précédent.
+  if (pair) type = 'D';
   // Catégorie : celle qui est dite (dans le bon sens si elle existe des deux), sinon celle de la dernière fois.
   let cat = '';
   if (a.categorie) {
