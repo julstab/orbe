@@ -1640,8 +1640,13 @@ function viewOrderForm(id) {
 
     const items = [['orders', rec]];
     if (F.pair.value) {
-      // L'autre moitié garde sa propre catégorie ; une nouvelle moitié reprend là où en est la récurrente.
+      // Une nouvelle moitié reprend là où en est la récurrente. L'autre moitié reçoit la catégorie jumelle quand elle
+      // est créée ou que la catégorie change ici, sinon elle garde la sienne.
       const q = common({ ...(p ?? { id: store.newId(), last: o ? recur.lastDone(o) : '' }) });
+      if (!p || (rec.cat ?? '') !== (o?.cat ?? '')) {
+        const c = twinCat(rec.cat);
+        if (c) q.cat = c; else delete q.cat;
+      }
       q.acc = F.pair.value;
       q.amt = -rec.amt;
       q.pair = rec.id;
