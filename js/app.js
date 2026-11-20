@@ -875,6 +875,7 @@ function wireCatField(sel, getType) {
       sel.innerHTML = catOptions(getType(), id);
       sel.value = id;
     } else sel.value = o.value;
+    show(); // le champ affiche le choix avant de refermer : vide, il vaudrait « Sans catégorie » (choix sans rien taper)
     close();
     if (coarsePointer.matches) input.blur(); // referme le clavier du téléphone
   }
