@@ -745,6 +745,12 @@ function getTitleIndex() {
     t.n++;
     if (e.date >= t.last.date) t.last = e;
   }
+  // Libellés des récurrentes qui n'ont pas encore créé d'opération (début à venir) : proposés aussi.
+  for (const o of recur.activeOrders()) {
+    const k = o.title && norm(o.title);
+    if (!k || byTitle.has(k)) continue;
+    byTitle.set(k, { title: o.title, key: k, n: 0, last: { title: o.title, amt: o.amt, cat: o.cat, mode: o.mode, acc: o.acc, date: o.start } });
+  }
   // Les libellés utilisés le plus récemment d'abord.
   titleIndex = [...byTitle.values()].sort((a, b) => (a.last.date < b.last.date ? 1 : -1));
   return titleIndex;
@@ -1570,7 +1576,11 @@ function viewOrderForm(id) {
         <label><input type="radio" name="type" value="D" ${type === 'D' ? 'checked' : ''}><span>Dépense</span></label>
         <label><input type="radio" name="type" value="R" ${type === 'R' ? 'checked' : ''}><span>Recette</span></label>
       </div>
-      <label class="field"><span>Libellé</span><input name="title" required maxlength="120" value="${esc(o?.title)}"></label>
+      <div class="field">
+        <label for="f-title">Libellé</label>
+        <input id="f-title" name="title" required maxlength="120" value="${esc(o?.title)}">
+        <div class="sugg" id="sugg" hidden></div>
+      </div>
       <label class="field"><span>Montant</span>
         <input name="amt" inputmode="decimal" required value="${o ? amountInput(o.amt) : ''}" placeholder="0,00"></label>
       <label class="field"><span>Compte</span><select name="acc">${accOptions(acc)}</select></label>
@@ -1608,6 +1618,32 @@ function viewOrderForm(id) {
     F.cat.innerHTML = catOptions(currentType(), F.cat.value);
   }));
   wireCatField(F.cat, currentType);
+
+  // Libellés déjà utilisés (opérations et récurrentes) proposés pendant la frappe, comme pour une opération.
+  const box = $('#sugg');
+  let picks = [];
+  F.title.addEventListener('input', () => {
+    picks = suggest(F.title.value);
+    box.hidden = !picks.length;
+    box.innerHTML = picks.map((t, i) => `<button type="button" data-i="${i}">
+      <span>${esc(t.title)}</span><small>${esc(catLabel(t.last.cat))} · ${signed(t.last.amt)}</small></button>`).join('');
+  });
+  box.addEventListener('mousedown', ev => ev.preventDefault());
+  box.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-i]');
+    if (!b) return;
+    const last = picks[+b.dataset.i].last;
+    F.title.value = picks[+b.dataset.i].title;
+    const ty = last.amt > 0 ? 'R' : 'D';
+    f.querySelector(`input[name=type][value=${ty}]`).checked = true;
+    F.cat.innerHTML = catOptions(ty, last.cat ?? '');
+    if (last.mode) F.mode.innerHTML = modeOptions(last.mode);
+    F.amt.placeholder = `dernier : ${amountInput(last.amt)}`;
+    box.hidden = true;
+    if (!F.amt.value) F.amt.focus();
+  });
+  F.title.addEventListener('blur', () => setTimeout(() => (box.hidden = true), 150));
+  F.title.addEventListener('keydown', ev => { if (ev.key === 'Escape') box.hidden = true; });
 
   f.addEventListener('submit', async ev => {
     ev.preventDefault();
