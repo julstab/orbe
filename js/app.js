@@ -1283,9 +1283,13 @@ function viewEntryForm(id, accId) {
 
     const items = [['entries', rec]];
     if (F.pair.value) {
-      // L'autre moitié reprend libellé, date, mode et référence ; elle garde sa catégorie et son pointage.
+      // L'autre moitié reprend libellé, date, mode et référence ; elle garde son pointage. Elle reçoit la catégorie
+      // jumelle quand elle est créée ou que la catégorie change ici, sinon elle garde la sienne.
       const q = { ...(p ?? { id: store.newId() }) };
-      if (!p) { const c = twinCat(rec.cat); if (c) q.cat = c; }
+      if (!p || (rec.cat ?? '') !== (e?.cat ?? '')) {
+        const c = twinCat(rec.cat);
+        if (c) q.cat = c; else delete q.cat;
+      }
       if (p && p.acc !== F.pair.value) delete q.chk; // passée sur un autre compte : à repointer
       q.acc = F.pair.value;
       q.date = rec.date;
