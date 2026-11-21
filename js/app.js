@@ -1056,7 +1056,6 @@ function viewEntryForm(id, accId) {
       <label class="field"><span>Compte</span><select name="acc">${accOptions(acc)}</select></label>
       <label class="field"><span>Virement avec le compte <em>(facultatif : crée l'opération inverse sur ce compte)</em></span>
         <select name="pair"><option value="">— Aucun —</option>${accOptions(p?.acc)}</select></label>
-      <label class="field"><span>Référence <em>(facultatif)</em></span><input name="ref" value="${esc(e?.ref)}"></label>
       <label class="check"><input type="checkbox" name="chk" ${e?.chk ? 'checked' : ''}> Opération pointée</label>
       <div class="actions">
         <button class="btn primary" type="submit">Enregistrer</button>
@@ -1285,7 +1284,7 @@ function viewEntryForm(id, accId) {
     rec.date = F.date.value;
     rec.amt = (currentType() === 'R' ? 1 : -1) * cents;
     rec.title = title;
-    for (const k of ['mode', 'cat', 'ref']) {
+    for (const k of ['mode', 'cat']) { // la référence (champ retiré) d'une ancienne opération est gardée telle quelle
       const v = F[k].value.trim();
       if (v) rec[k] = v; else delete rec[k];
     }
@@ -1615,10 +1614,7 @@ function viewOrderForm(id) {
         <label class="field"><span>Début</span><input type="date" name="start" required value="${o?.start ?? today}"></label>
         <label class="field"><span>Fin <em>(facultatif)</em></span><input type="date" name="end" value="${o?.end ?? ''}"></label>
       </div>
-      <div class="grid2">
-        <label class="field"><span>Mode</span><select name="mode">${modeOptions(o?.mode ?? '')}</select></label>
-        <label class="field"><span>Référence <em>(facultatif)</em></span><input name="ref" value="${esc(o?.ref)}"></label>
-      </div>
+      <label class="field"><span>Mode</span><select name="mode">${modeOptions(o?.mode ?? '')}</select></label>
       ${catField(catOptions(type, o?.cat, true))}
       <label class="check"><input type="checkbox" name="chk" ${o?.chk ? 'checked' : ''}> Pointer automatiquement les opérations créées</label>
       <p class="hint">${o ? (next ? `Prochaine échéance : ${fullDate(next)}.` : 'Terminée : plus aucune échéance à venir.')
@@ -1687,7 +1683,7 @@ function viewOrderForm(id) {
       r.freq = Number(F.freq.value);
       r.start = F.start.value;
       if (F.end.value) r.end = F.end.value; else delete r.end;
-      for (const k of ['mode', 'ref']) { const v = F[k].value.trim(); if (v) r[k] = v; else delete r[k]; }
+      { const v = F.mode.value.trim(); if (v) r.mode = v; else delete r.mode; } // référence (champ retiré) : gardée telle quelle
       if (F.chk.checked) r.chk = true; else delete r.chk;
       return r;
     };
